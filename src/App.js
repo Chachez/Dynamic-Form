@@ -74,93 +74,89 @@ const App = () => {
           Create New Journal
         </Typography>
         <form>
-          {inputField.map((field, idx) => {
-            return (
-              <Grid spacing={2} container key={idx}>
-                <Table>
-                  <TableHead>
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        align={column.align}
-                        style={{
-                          top: 57,
-                          minWidth: column.minWidth,
-                          textAlign: "center",
-                        }}
+          <Table>
+            <TableHead>
+              {columns.map((column) => (
+                <TableCell
+                  key={column.id}
+                  align={column.align}
+                  style={{
+                    top: 57,
+                    minWidth: column.minWidth,
+                    textAlign: "center",
+                  }}
+                >
+                  {column.label}
+                </TableCell>
+              ))}
+            </TableHead>
+            {inputField.map((field, idx) => {
+              return (
+                <TableRow key="5">
+                  <TableCell>
+                    <TextField
+                      id="outlined-basic"
+                      variant="outlined"
+                      fullWidth
+                      onChange={(e) => handleInputChange(e, idx)}
+                      margin="normal"
+                      name="account"
+                      value={field.account || ""}
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <TextField
+                      id="outlined-basic"
+                      variant="outlined"
+                      fullWidth
+                      onChange={(e) => handleInputChange(e, idx)}
+                      margin="normal"
+                      name="debit"
+                      value={field.debit || ""}
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <TextField
+                      id="outlined-basic"
+                      variant="outlined"
+                      fullWidth
+                      onChange={(e) => handleInputChange(e, idx)}
+                      margin="normal"
+                      name="credit"
+                      value={field.credit || ""}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right">12,540.00</TableCell>
+
+                  <TableCell>
+                    {inputField.length !== 1 && (
+                      <Fab
+                        color="primary"
+                        aria-label="add"
+                        onClick={() => removeInputField(idx)}
+                        style={{ marginTop: "1rem" }}
                       >
-                        {column.label}
-                      </TableCell>
-                    ))}
-                  </TableHead>
-                </Table>
-                <Grid item sm={12} md={6} lg={2}>
-                  <TextField
-                    id="outlined-basic"
-                    label="Account"
-                    variant="outlined"
-                    fullWidth
-                    onChange={(e) => handleInputChange(e, idx)}
-                    margin="normal"
-                    name="account"
-                    value={field.account || ""}
-                  />
-                </Grid>
-
-                <Grid item sm={12} md={6} lg={2}>
-                  <TextField
-                    id="outlined-basic"
-                    label="Debit"
-                    variant="outlined"
-                    fullWidth
-                    onChange={(e) => handleInputChange(e, idx)}
-                    margin="normal"
-                    name="debit"
-                    value={field.debit || ""}
-                  />
-                </Grid>
-
-                <Grid item sm={12} md={6} lg={2}>
-                  <TextField
-                    id="outlined-basic"
-                    label="Credit"
-                    variant="outlined"
-                    fullWidth
-                    onChange={(e) => handleInputChange(e, idx)}
-                    margin="normal"
-                    name="credit"
-                    value={field.credit || ""}
-                  />
-                </Grid>
-
-                {inputField.length !== 1 && (
-                  <Grid item sm={12} md={6} lg={3}>
-                    <Fab
-                      color="primary"
-                      aria-label="add"
-                      onClick={() => removeInputField(idx)}
-                      style={{ marginTop: "1rem" }}
-                    >
-                      <DeleteIcon />
-                    </Fab>
-                  </Grid>
-                )}
-
-                {inputField.length - 1 === idx && (
-                  <Grid item sm={12} md={6} lg={3}>
-                    <Fab
-                      color="primary"
-                      aria-label="add"
-                      onClick={addInputField}
-                      style={{ marginTop: "1rem" }}
-                    >
-                      <AddIcon />
-                    </Fab>
-                  </Grid>
-                )}
-              </Grid>
-            );
-          })}
+                        <DeleteIcon />
+                      </Fab>
+                    )}
+                    {inputField.length - 1 === idx && (
+                      <Fab
+                        color="primary"
+                        aria-label="add"
+                        onClick={addInputField}
+                        style={{ marginTop: "1rem", marginLeft: "3rem" }}
+                      >
+                        <AddIcon />
+                      </Fab>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </Table>
         </form>
       </PaperComponent>
     </RootComponent>
