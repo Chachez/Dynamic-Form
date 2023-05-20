@@ -11,6 +11,8 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  TableFooter,
+  Autocomplete,
   Select,
   MenuItem,
   Alert,
@@ -23,6 +25,7 @@ import { styled } from "@mui/system";
 import "./App.css";
 import { accounts } from "./data";
 import { sumArray } from "./utils/arraySum";
+import { amountFormatter } from "./utils/currencyFormatter";
 
 const RootComponent = styled("div")(({ theme }) => ({
   maxWidth: "100%",
@@ -47,7 +50,7 @@ const columns = [
   { id: "account", label: "Account", minWidth: 100 },
   { id: "debit", label: "Debit", minWidth: 100 },
   { id: "credit", label: "Credit", minWidth: 100 },
-  { id: "balance", label: "Balance", minWidth: 100 },
+  { id: "balance", label: "", minWidth: 100 },
   { id: "actions", label: "Actions", minWidth: 100 },
 ];
 
@@ -56,26 +59,25 @@ const App = () => {
     { account: "", debit: "", credit: "", status: "" },
   ]);
 
+  const [alertVisible, setAlertVisible] = useState(false);
   const [values, setValues] = useState({
     isValid: false,
     alertMessage: "",
     showAlert: false,
   });
+
   const addInputField = () => {
     const lastField = inputField[inputField.length - 1];
-    if (
-      lastField.account !== "" &&
-      (lastField.debit !== "" || lastField.credit !== "")
-    ) {
+    if (lastField.account && (lastField.debit || lastField.credit)) {
       setInputField([
         ...inputField,
         { account: "", debit: "", credit: "", status: "" },
       ]);
     } else {
       let alertMessage = "";
-      if (lastField.account === "") {
+      if (!lastField.account) {
         alertMessage = "Please select an Account.";
-      } else if (lastField.debit === "" && lastField.credit === "") {
+      } else if (!lastField.debit && !lastField.credit) {
         alertMessage = "Please fill either Debit or Credit.";
       }
       setValues((prevState) => ({
@@ -99,18 +101,30 @@ const App = () => {
       ...list[index],
       [name]: value,
     };
+
+    // Update the status based on debit and credit values
+    const debit = list[index].debit || "";
+    const credit = list[index].credit || "";
+
+    // Clear the account field if the value is undefined
+    if (name === "account" && value === undefined) {
+      list[index].account = "";
+    }
+
+    list[index].status = debit !== "" ? "debit" : credit !== "" ? "credit" : "";
+
     setInputField(list);
   };
 
   const debitData = inputField;
   const debits = debitData
-    .filter((field) => field.status === "debit")
+    .filter((field) => field.status === "debit" && field.debit !== "") // Filter out empty debit fields
     .map((account) => parseInt(account.debit));
   const debitSum = sumArray(debits);
 
   const creditData = inputField;
   const credits = creditData
-    .filter((field) => field.status === "credit")
+    .filter((field) => field.status === "credit" && field.credit !== "") // Filter out empty credit fields
     .map((account) => parseInt(account.credit));
   const creditSum = sumArray(credits);
 
@@ -119,8 +133,12 @@ const App = () => {
       ...prevState,
       isValid: debitSum === creditSum,
     }));
-    if (values.showAlert) {
+
+    if (values.showAlert && debitSum === creditSum) {
+      setAlertVisible(true);
+
       const timer = setTimeout(() => {
+        setAlertVisible(false);
         setValues((prevState) => ({
           ...prevState,
           showAlert: false,
@@ -149,6 +167,16 @@ const App = () => {
                       style={{ minWidth: column.minWidth }}
                     >
                       {column.label}
+                      {column.id === "debit" && (
+                        <Typography variant="body2">
+                          Total Debits: {debitSum}
+                        </Typography>
+                      )}
+                      {column.id === "credit" && (
+                        <Typography variant="body2">
+                          Total Credits: {creditSum}
+                        </Typography>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -157,18 +185,28 @@ const App = () => {
                 {inputField.map((field, idx) => (
                   <TableRow key={idx}>
                     <TableCell>
-                      <Select
+                      <Autocomplete
                         fullWidth
-                        name="account"
-                        value={field.account || ""}
-                        onChange={(e) => handleInputChange(e, idx)}
-                      >
-                        {accounts?.map((acc, index) => (
-                          <MenuItem key={index} value={acc.name}>
-                            {acc.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
+                        options={accounts}
+                        getOptionLabel={(option) =>
+                          option ? option.label : ""
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            variant="outlined"
+                            margin="normal"
+                            name="account"
+                          />
+                        )}
+                        value={field.account || null}
+                        onChange={(e, value) => {
+                          handleInputChange(
+                            { target: { name: "account", value } },
+                            idx
+                          );
+                        }}
+                      />
                     </TableCell>
                     <TableCell>
                       <TextField
@@ -176,11 +214,19 @@ const App = () => {
                         variant="outlined"
                         fullWidth
                         onChange={(e) => {
-                          handleInputChange(e, idx);
+                          const value = e.target.value;
+                          handleInputChange(
+                            {
+                              target: {
+                                name: "debit",
+                                value: isNaN(value) ? "" : parseFloat(value),
+                              },
+                            },
+                            idx
+                          );
                           setInputField((prevState) => {
                             const newState = [...prevState];
-                            newState[idx].status =
-                              field.debit !== "" ? "debit" : "";
+                            newState[idx].status = value !== "" ? "debit" : "";
                             return newState;
                           });
                         }}
@@ -190,17 +236,26 @@ const App = () => {
                         disabled={field.credit !== ""}
                       />
                     </TableCell>
+
                     <TableCell>
                       <TextField
                         id="outlined-basic"
                         variant="outlined"
                         fullWidth
                         onChange={(e) => {
-                          handleInputChange(e, idx);
+                          const value = e.target.value;
+                          handleInputChange(
+                            {
+                              target: {
+                                name: "credit",
+                                value: isNaN(value) ? "" : parseFloat(value),
+                              },
+                            },
+                            idx
+                          );
                           setInputField((prevState) => {
                             const newState = [...prevState];
-                            newState[idx].status =
-                              field.credit !== "" ? "credit" : "";
+                            newState[idx].status = value !== "" ? "credit" : "";
                             return newState;
                           });
                         }}
@@ -210,7 +265,7 @@ const App = () => {
                         disabled={field.debit !== ""}
                       />
                     </TableCell>
-                    <TableCell align="right">12,540.00</TableCell>
+                    <TableCell align="right" />
                     <TableCell>
                       {inputField.length !== 1 && (
                         <Fab
@@ -236,6 +291,19 @@ const App = () => {
                   </TableRow>
                 ))}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2">
+                      Balance: {debitSum - creditSum}
+                    </Typography>
+                  </TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </TableContainer>
         </form>
@@ -254,7 +322,7 @@ const App = () => {
           </Alert>
         )}
 
-        {!values.isValid && (
+        {!values.isValid && !alertVisible && (
           <Alert severity="warning" style={{ margin: "1rem" }}>
             <AlertTitle>Warning</AlertTitle>
             Please ensure that the Debits and Credits balance
