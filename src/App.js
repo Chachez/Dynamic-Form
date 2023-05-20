@@ -21,6 +21,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { styled } from "@mui/system";
+import { Formik, Field, ErrorMessage, Form } from "formik";
+import * as Yup from "yup";
 
 import "./App.css";
 import { accounts } from "./data";
@@ -81,9 +83,10 @@ const App = () => {
     } else {
       let alertMessage = "";
       if (!lastField.account) {
-        alertMessage = "Please select an Account.";
+        alertMessage = "Select an Account to proceed.";
       } else if (!lastField.debit && !lastField.credit) {
-        alertMessage = "Please fill either Debit or Credit.";
+        alertMessage =
+          "Ensure amounts are in numerical format for either Debit or Credit fields and are not empty to proceed.";
       }
       setValues((prevState) => ({
         ...prevState,
@@ -153,6 +156,7 @@ const App = () => {
       return () => clearTimeout(timer);
     }
   }, [debitSum, creditSum, values.showAlert]);
+  console.log(inputField);
 
   return (
     <RootComponent>
@@ -160,178 +164,240 @@ const App = () => {
         <Typography variant="h6" gutterBottom>
           Create New Journal
         </Typography>
-        <form>
-          <MuiTableContainer>
-            <Table style={{ position: "relative" }}>
-              <TableHead>
-                <TableRow style={{ position: "sticky", top: 0, zIndex: 1 }}>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.id}
-                      align="center"
-                      style={{ minWidth: column.minWidth }}
-                    >
-                      {column.label}
-                      {column.id === "debit" && (
-                        <Typography variant="body2">
-                          Total Debits: {debitSum}
-                        </Typography>
-                      )}
-                      {column.id === "credit" && (
-                        <Typography variant="body2">
-                          Total Credits: {creditSum}
-                        </Typography>
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {inputField.map((field, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>
-                      <Autocomplete
-                        fullWidth
-                        options={accounts}
-                        getOptionLabel={(option) =>
-                          option ? option.label : ""
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            variant="outlined"
-                            margin="normal"
-                            name="account"
+        <Formik
+          initialValues={{
+            description: "",
+            accounts: [],
+          }}
+          validationSchema={Yup.object().shape({
+            description: Yup.string().required("Give a description to proceed"),
+          })}
+          onSubmit={(values, { resetForm }) => {
+            resetForm();
+            setInputField([{ account: "", debit: "", credit: "", status: "" }]);
+            console.log("values", values);
+          }}
+        >
+          {({ errors, touched, resetForm }) => (
+            <Form>
+              <MuiTableContainer>
+                <Table style={{ position: "relative" }}>
+                  <TableHead>
+                    <TableRow style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                      {columns.map((column) => (
+                        <TableCell
+                          key={column.id}
+                          align="center"
+                          style={{ minWidth: column.minWidth }}
+                        >
+                          {column.label}
+                          {column.id === "debit" && (
+                            <Typography variant="body2">
+                              Total Debits: {debitSum}
+                            </Typography>
+                          )}
+                          {column.id === "credit" && (
+                            <Typography variant="body2">
+                              Total Credits: {creditSum}
+                            </Typography>
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {inputField.map((field, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Autocomplete
+                            fullWidth
+                            options={accounts}
+                            getOptionLabel={(option) =>
+                              option ? option.label : ""
+                            }
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                variant="outlined"
+                                margin="normal"
+                                name="account"
+                              />
+                            )}
+                            value={field.account || null}
+                            onChange={(e, value) => {
+                              handleInputChange(
+                                { target: { name: "account", value } },
+                                idx
+                              );
+                            }}
                           />
-                        )}
-                        value={field.account || null}
-                        onChange={(e, value) => {
-                          handleInputChange(
-                            { target: { name: "account", value } },
-                            idx
-                          );
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
-                        onChange={(e) => {
-                          handleInputChange(e, idx);
-                          setInputField((prevState) => {
-                            const newState = [...prevState];
-                            newState[idx].status =
-                              field.debit !== "" ? "debit" : "";
-                            return newState;
-                          });
-                        }}
-                        margin="normal"
-                        name="debit"
-                        value={field.debit || ""}
-                        disabled={field.credit !== ""}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        id="outlined-basic"
-                        variant="outlined"
-                        fullWidth
-                        onChange={(e) => {
-                          handleInputChange(e, idx);
-                          setInputField((prevState) => {
-                            const newState = [...prevState];
-                            newState[idx].status =
-                              field.credit !== "" ? "credit" : "";
-                            return newState;
-                          });
-                        }}
-                        margin="normal"
-                        name="credit"
-                        value={field.credit || ""}
-                        disabled={field.debit !== ""}
-                      />
-                    </TableCell>
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            onChange={(e) => {
+                              handleInputChange(e, idx);
+                              setInputField((prevState) => {
+                                const newState = [...prevState];
+                                newState[idx].status =
+                                  field.debit !== "" ? "debit" : "";
+                                return newState;
+                              });
+                            }}
+                            margin="normal"
+                            name="debit"
+                            value={field.debit || ""}
+                            disabled={field.credit !== ""}
+                            inputProps={{
+                              type: "number",
+                              pattern: "[0-9]*", // Only allow numeric input
+                              min: 0,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            id="outlined-basic"
+                            variant="outlined"
+                            fullWidth
+                            onChange={(e) => {
+                              handleInputChange(e, idx);
+                              setInputField((prevState) => {
+                                const newState = [...prevState];
+                                newState[idx].status =
+                                  field.credit !== "" ? "credit" : "";
+                                return newState;
+                              });
+                            }}
+                            margin="normal"
+                            name="credit"
+                            value={field.credit || ""}
+                            disabled={field.debit !== ""}
+                            inputProps={{
+                              type: "number",
+                              pattern: "[0-9]*", // Only allow numeric input
+                              min: 0,
+                            }}
+                          />
+                        </TableCell>
 
-                    <TableCell align="right" />
-                    <TableCell>
-                      {inputField.length !== 1 && (
-                        <Tooltip title="Delete Record">
-                          <Fab
-                            color="primary"
-                            aria-label="add"
-                            onClick={() => removeInputField(idx)}
-                            style={{ marginTop: "1rem" }}
-                          >
-                            <DeleteIcon />
-                          </Fab>
-                        </Tooltip>
-                      )}
-                      {inputField.length - 1 === idx && (
-                        <Tooltip title="Add New Record">
-                          <Fab
-                            color="primary"
-                            aria-label="add"
-                            onClick={addInputField}
-                            style={{ marginTop: "1rem", marginLeft: "3rem" }}
-                          >
-                            <AddIcon />
-                          </Fab>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter style={{ position: "sticky", bottom: 0, zIndex: 1 }}>
-                {" "}
-                <TableRow>
-                  <TableCell></TableCell>
-                  <TableCell></TableCell>
-                  <TableCell></TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2">
-                      Balance: {debitSum - creditSum}
-                    </Typography>
-                  </TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </MuiTableContainer>
-        </form>
+                        <TableCell align="right" />
+                        <TableCell>
+                          {inputField.length !== 1 && (
+                            <Tooltip title="Delete Record">
+                              <Fab
+                                color="primary"
+                                aria-label="add"
+                                onClick={() => removeInputField(idx)}
+                                style={{ marginTop: "1rem" }}
+                              >
+                                <DeleteIcon />
+                              </Fab>
+                            </Tooltip>
+                          )}
+                          {inputField.length - 1 === idx && (
+                            <Tooltip title="Add New Record">
+                              <Fab
+                                color="primary"
+                                aria-label="add"
+                                onClick={addInputField}
+                                style={{
+                                  marginTop: "1rem",
+                                  marginLeft: "3rem",
+                                }}
+                              >
+                                <AddIcon />
+                              </Fab>
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter
+                    style={{ position: "sticky", bottom: 0, zIndex: 1 }}
+                  >
+                    {" "}
+                    <TableRow>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell align="right">
+                        <Typography variant="body2">
+                          Difference: {debitSum - creditSum}
+                        </Typography>
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              </MuiTableContainer>
+              {/* Alerts */}
+              {values.showAlert && (
+                <Alert
+                  severity="warning"
+                  style={{ margin: "1rem" }}
+                  onClose={() =>
+                    setValues((prevState) => ({
+                      ...prevState,
+                      showAlert: false,
+                    }))
+                  }
+                >
+                  <AlertTitle>Warning</AlertTitle>
+                  {values.alertMessage}
+                </Alert>
+              )}
 
-        {/* Alerts */}
+              {!values.isValid && !alertVisible && (
+                <Alert severity="warning" style={{ margin: "1rem" }}>
+                  <AlertTitle>Warning</AlertTitle>
+                  Please ensure that the Debits and Credits balance
+                </Alert>
+              )}
 
-        {values.showAlert && (
-          <Alert
-            severity="warning"
-            style={{ margin: "1rem" }}
-            onClose={() =>
-              setValues((prevState) => ({ ...prevState, showAlert: false }))
-            }
-          >
-            <AlertTitle>Warning</AlertTitle>
-            {values.alertMessage}
-          </Alert>
-        )}
+              <Field
+                as={TextField}
+                variant="outlined"
+                fullWidth
+                multiline
+                rows={2}
+                margin="normal"
+                label="Description"
+                name="description"
+                helperText={<ErrorMessage name="description" />}
+                error={Boolean(touched.description && errors.description)}
+              />
 
-        {!values.isValid && !alertVisible && (
-          <Alert severity="warning" style={{ margin: "1rem" }}>
-            <AlertTitle>Warning</AlertTitle>
-            Please ensure that the Debits and Credits balance
-          </Alert>
-        )}
-
-        <DialogActions>
-          <Button variant="outlined" type="submit" color="primary">
-            Cancel
-          </Button>
-          <Button autoFocus variant="contained">
-            Save & Publish
-          </Button>
-        </DialogActions>
+              <DialogActions>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={(e) => {
+                    resetForm(e);
+                    setInputField([
+                      { account: "", debit: "", credit: "", status: "" },
+                    ]);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={
+                    debitSum !== creditSum ||
+                    (debitSum === 0 && creditSum === 0)
+                  }
+                >
+                  Save & Publish
+                </Button>
+              </DialogActions>
+            </Form>
+          )}
+        </Formik>
       </PaperComponent>
     </RootComponent>
   );
