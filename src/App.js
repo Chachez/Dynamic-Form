@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Paper,
   TextField,
-  Grid,
   Fab,
   Typography,
   TableContainer,
@@ -13,10 +12,11 @@ import {
   TableCell,
   TableFooter,
   Autocomplete,
-  Select,
-  MenuItem,
   Alert,
   AlertTitle,
+  DialogActions,
+  Button,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -44,6 +44,12 @@ const PaperComponent = styled(Paper)(({ theme }) => ({
   },
   borderRadius: "10px",
   boxShadow: "0 10px 30px 0 rgba(172, 168, 168, 0.43)",
+}));
+
+const MuiTableContainer = styled(TableContainer)(({ theme }) => ({
+  maxHeight: "400px" /* Set the desired height here */,
+  overflowY: "scroll" /* Enable vertical scrolling if needed */,
+  position: "relative",
 }));
 
 const columns = [
@@ -156,10 +162,10 @@ const App = () => {
           Create New Journal
         </Typography>
         <form>
-          <TableContainer>
-            <Table>
+          <MuiTableContainer>
+            <Table style={{ position: "relative" }}>
               <TableHead>
-                <TableRow>
+                <TableRow style={{ position: "sticky", top: 0, zIndex: 1 }}>
                   {columns.map((column) => (
                     <TableCell
                       key={column.id}
@@ -214,19 +220,11 @@ const App = () => {
                         variant="outlined"
                         fullWidth
                         onChange={(e) => {
-                          const value = e.target.value;
-                          handleInputChange(
-                            {
-                              target: {
-                                name: "debit",
-                                value: isNaN(value) ? "" : parseFloat(value),
-                              },
-                            },
-                            idx
-                          );
+                          handleInputChange(e, idx);
                           setInputField((prevState) => {
                             const newState = [...prevState];
-                            newState[idx].status = value !== "" ? "debit" : "";
+                            newState[idx].status =
+                              field.debit !== "" ? "debit" : "";
                             return newState;
                           });
                         }}
@@ -236,26 +234,17 @@ const App = () => {
                         disabled={field.credit !== ""}
                       />
                     </TableCell>
-
                     <TableCell>
                       <TextField
                         id="outlined-basic"
                         variant="outlined"
                         fullWidth
                         onChange={(e) => {
-                          const value = e.target.value;
-                          handleInputChange(
-                            {
-                              target: {
-                                name: "credit",
-                                value: isNaN(value) ? "" : parseFloat(value),
-                              },
-                            },
-                            idx
-                          );
+                          handleInputChange(e, idx);
                           setInputField((prevState) => {
                             const newState = [...prevState];
-                            newState[idx].status = value !== "" ? "credit" : "";
+                            newState[idx].status =
+                              field.credit !== "" ? "credit" : "";
                             return newState;
                           });
                         }}
@@ -265,33 +254,39 @@ const App = () => {
                         disabled={field.debit !== ""}
                       />
                     </TableCell>
+
                     <TableCell align="right" />
                     <TableCell>
                       {inputField.length !== 1 && (
-                        <Fab
-                          color="primary"
-                          aria-label="add"
-                          onClick={() => removeInputField(idx)}
-                          style={{ marginTop: "1rem" }}
-                        >
-                          <DeleteIcon />
-                        </Fab>
+                        <Tooltip title="Delete Record">
+                          <Fab
+                            color="primary"
+                            aria-label="add"
+                            onClick={() => removeInputField(idx)}
+                            style={{ marginTop: "1rem" }}
+                          >
+                            <DeleteIcon />
+                          </Fab>
+                        </Tooltip>
                       )}
                       {inputField.length - 1 === idx && (
-                        <Fab
-                          color="primary"
-                          aria-label="add"
-                          onClick={addInputField}
-                          style={{ marginTop: "1rem", marginLeft: "3rem" }}
-                        >
-                          <AddIcon />
-                        </Fab>
+                        <Tooltip title="Add New Record">
+                          <Fab
+                            color="primary"
+                            aria-label="add"
+                            onClick={addInputField}
+                            style={{ marginTop: "1rem", marginLeft: "3rem" }}
+                          >
+                            <AddIcon />
+                          </Fab>
+                        </Tooltip>
                       )}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-              <TableFooter>
+              <TableFooter style={{ position: "sticky", bottom: 0, zIndex: 1 }}>
+                {" "}
                 <TableRow>
                   <TableCell></TableCell>
                   <TableCell></TableCell>
@@ -305,7 +300,7 @@ const App = () => {
                 </TableRow>
               </TableFooter>
             </Table>
-          </TableContainer>
+          </MuiTableContainer>
         </form>
 
         {/* Alerts */}
@@ -313,6 +308,7 @@ const App = () => {
         {values.showAlert && (
           <Alert
             severity="warning"
+            style={{ margin: "1rem" }}
             onClose={() =>
               setValues((prevState) => ({ ...prevState, showAlert: false }))
             }
@@ -328,6 +324,15 @@ const App = () => {
             Please ensure that the Debits and Credits balance
           </Alert>
         )}
+
+        <DialogActions>
+          <Button variant="outlined" type="submit" color="primary">
+            Cancel
+          </Button>
+          <Button autoFocus variant="contained">
+            Save & Publish
+          </Button>
+        </DialogActions>
       </PaperComponent>
     </RootComponent>
   );
