@@ -12,6 +12,8 @@ import {
   TableCell,
   Select,
   MenuItem,
+  Alert,
+  AlertTitle,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -19,6 +21,7 @@ import { styled } from "@mui/system";
 
 import "./App.css";
 import { accounts } from "./data";
+import { sumArray } from "./utils/arraySum";
 
 const RootComponent = styled("div")(({ theme }) => ({
   maxWidth: "100%",
@@ -49,11 +52,18 @@ const columns = [
 
 const App = () => {
   const [inputField, setInputField] = useState([
-    { account: "", debit: null, credit: null },
+    { account: "", debit: "", credit: "", status: "" },
   ]);
 
+  const [values, setValues] = useState({
+    isValid: false,
+  });
+
   const addInputField = () => {
-    setInputField([...inputField, { account: "", debit: null, credit: null }]);
+    setInputField([
+      ...inputField,
+      { account: "", debit: "", credit: "", status: "" },
+    ]);
   };
 
   const removeInputField = (index) => {
@@ -69,7 +79,39 @@ const App = () => {
     setInputField(list);
   };
 
-  console.log(inputField);
+  // Returns array of debits
+  const debitData = inputField;
+
+  // This returns the debits array
+  let debits = debitData
+    .filter((field) => field.status == "debit")
+    .map((account) => parseInt(account.debit));
+
+  // We then sum the total in the array mapped
+  const debitSum = sumArray(debits);
+
+  // Returns array of credits
+  const creditData = inputField;
+
+  // This returns the debits array
+  let credits = creditData
+    .filter((field) => field.status == "credit")
+    .map((account) => parseInt(account.credit));
+
+  // We then sum the total in the array mapped
+  const creditSum = sumArray(credits);
+
+  useEffect(() => {
+    debitSum !== creditSum
+      ? setValues((state) => {
+          state.isValid = false;
+          return { ...state };
+        })
+      : setValues((state) => {
+          state.isValid = true;
+          return { ...state };
+        });
+  }, [values.isValid, inputField]);
 
   return (
     <RootComponent>
@@ -118,10 +160,20 @@ const App = () => {
                         id="outlined-basic"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => handleInputChange(e, idx)}
+                        onChange={(e) => {
+                          handleInputChange(e, idx);
+
+                          setInputField((prevState) => {
+                            const newState = [...prevState]; // Create a copy of the state array
+                            newState[idx].status =
+                              field.debit !== "" ? "debit" : ""; // Update the value of the 'status' key based on the condition
+                            return newState; // Return the updated state array
+                          });
+                        }}
                         margin="normal"
                         name="debit"
                         value={field.debit || ""}
+                        disabled={field.credit != ""}
                       />
                     </TableCell>
 
@@ -130,10 +182,20 @@ const App = () => {
                         id="outlined-basic"
                         variant="outlined"
                         fullWidth
-                        onChange={(e) => handleInputChange(e, idx)}
+                        onChange={(e) => {
+                          handleInputChange(e, idx);
+
+                          setInputField((prevState) => {
+                            const newState = [...prevState]; // Create a copy of the state array
+                            newState[idx].status =
+                              field.credit !== "" ? "credit" : ""; // Update the value of the 'status' key based on the condition
+                            return newState; // Return the updated state array
+                          });
+                        }}
                         margin="normal"
                         name="credit"
                         value={field.credit || ""}
+                        disabled={field.debit != ""}
                       />
                     </TableCell>
 
@@ -167,6 +229,12 @@ const App = () => {
             </TableBody>
           </Table>
         </form>
+        {!values.isValid && (
+          <Alert severity="warning" style={{ margin: "1rem" }}>
+            <AlertTitle>Warning</AlertTitle>
+            Please ensure that the Debits and Credits balance
+          </Alert>
+        )}
       </PaperComponent>
     </RootComponent>
   );
