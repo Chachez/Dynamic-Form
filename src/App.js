@@ -25,7 +25,6 @@ import { styled } from "@mui/system";
 import "./App.css";
 import { accounts } from "./data";
 import { sumArray } from "./utils/arraySum";
-import { amountFormatter } from "./utils/currencyFormatter";
 
 const RootComponent = styled("div")(({ theme }) => ({
   maxWidth: "100%",
