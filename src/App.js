@@ -5,6 +5,7 @@ import {
   Grid,
   Fab,
   Typography,
+  TableContainer,
   Table,
   TableHead,
   TableBody,
@@ -57,13 +58,32 @@ const App = () => {
 
   const [values, setValues] = useState({
     isValid: false,
+    alertMessage: "",
+    showAlert: false,
   });
-
   const addInputField = () => {
-    setInputField([
-      ...inputField,
-      { account: "", debit: "", credit: "", status: "" },
-    ]);
+    const lastField = inputField[inputField.length - 1];
+    if (
+      lastField.account !== "" &&
+      (lastField.debit !== "" || lastField.credit !== "")
+    ) {
+      setInputField([
+        ...inputField,
+        { account: "", debit: "", credit: "", status: "" },
+      ]);
+    } else {
+      let alertMessage = "";
+      if (lastField.account === "") {
+        alertMessage = "Please select an Account.";
+      } else if (lastField.debit === "" && lastField.credit === "") {
+        alertMessage = "Please fill either Debit or Credit.";
+      }
+      setValues((prevState) => ({
+        ...prevState,
+        showAlert: true,
+        alertMessage,
+      }));
+    }
   };
 
   const removeInputField = (index) => {
@@ -75,43 +95,41 @@ const App = () => {
   const handleInputChange = (e, index) => {
     const { name, value } = e.target;
     const list = [...inputField];
-    list[index][name] = value;
+    list[index] = {
+      ...list[index],
+      [name]: value,
+    };
     setInputField(list);
   };
 
-  // Returns array of debits
   const debitData = inputField;
-
-  // This returns the debits array
-  let debits = debitData
-    .filter((field) => field.status == "debit")
+  const debits = debitData
+    .filter((field) => field.status === "debit")
     .map((account) => parseInt(account.debit));
-
-  // We then sum the total in the array mapped
   const debitSum = sumArray(debits);
 
-  // Returns array of credits
   const creditData = inputField;
-
-  // This returns the debits array
-  let credits = creditData
-    .filter((field) => field.status == "credit")
+  const credits = creditData
+    .filter((field) => field.status === "credit")
     .map((account) => parseInt(account.credit));
-
-  // We then sum the total in the array mapped
   const creditSum = sumArray(credits);
 
   useEffect(() => {
-    debitSum !== creditSum
-      ? setValues((state) => {
-          state.isValid = false;
-          return { ...state };
-        })
-      : setValues((state) => {
-          state.isValid = true;
-          return { ...state };
-        });
-  }, [values.isValid, inputField]);
+    setValues((prevState) => ({
+      ...prevState,
+      isValid: debitSum === creditSum,
+    }));
+    if (values.showAlert) {
+      const timer = setTimeout(() => {
+        setValues((prevState) => ({
+          ...prevState,
+          showAlert: false,
+        }));
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [debitSum, creditSum, values.showAlert]);
 
   return (
     <RootComponent>
@@ -120,25 +138,23 @@ const App = () => {
           Create New Journal
         </Typography>
         <form>
-          <Table>
-            <TableHead>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align}
-                  style={{
-                    top: 57,
-                    minWidth: column.minWidth,
-                    textAlign: "center",
-                  }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableHead>
-            <TableBody>
-              {inputField.map((field, idx) => {
-                return (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      align="center"
+                      style={{ minWidth: column.minWidth }}
+                    >
+                      {column.label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {inputField.map((field, idx) => (
                   <TableRow key={idx}>
                     <TableCell>
                       <Select
@@ -154,7 +170,6 @@ const App = () => {
                         ))}
                       </Select>
                     </TableCell>
-
                     <TableCell>
                       <TextField
                         id="outlined-basic"
@@ -162,21 +177,19 @@ const App = () => {
                         fullWidth
                         onChange={(e) => {
                           handleInputChange(e, idx);
-
                           setInputField((prevState) => {
-                            const newState = [...prevState]; // Create a copy of the state array
+                            const newState = [...prevState];
                             newState[idx].status =
-                              field.debit !== "" ? "debit" : ""; // Update the value of the 'status' key based on the condition
-                            return newState; // Return the updated state array
+                              field.debit !== "" ? "debit" : "";
+                            return newState;
                           });
                         }}
                         margin="normal"
                         name="debit"
                         value={field.debit || ""}
-                        disabled={field.credit != ""}
+                        disabled={field.credit !== ""}
                       />
                     </TableCell>
-
                     <TableCell>
                       <TextField
                         id="outlined-basic"
@@ -184,23 +197,20 @@ const App = () => {
                         fullWidth
                         onChange={(e) => {
                           handleInputChange(e, idx);
-
                           setInputField((prevState) => {
-                            const newState = [...prevState]; // Create a copy of the state array
+                            const newState = [...prevState];
                             newState[idx].status =
-                              field.credit !== "" ? "credit" : ""; // Update the value of the 'status' key based on the condition
-                            return newState; // Return the updated state array
+                              field.credit !== "" ? "credit" : "";
+                            return newState;
                           });
                         }}
                         margin="normal"
                         name="credit"
                         value={field.credit || ""}
-                        disabled={field.debit != ""}
+                        disabled={field.debit !== ""}
                       />
                     </TableCell>
-
                     <TableCell align="right">12,540.00</TableCell>
-
                     <TableCell>
                       {inputField.length !== 1 && (
                         <Fab
@@ -224,11 +234,26 @@ const App = () => {
                       )}
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </form>
+
+        {/* Alerts */}
+
+        {values.showAlert && (
+          <Alert
+            severity="warning"
+            onClose={() =>
+              setValues((prevState) => ({ ...prevState, showAlert: false }))
+            }
+          >
+            <AlertTitle>Warning</AlertTitle>
+            {values.alertMessage}
+          </Alert>
+        )}
+
         {!values.isValid && (
           <Alert severity="warning" style={{ margin: "1rem" }}>
             <AlertTitle>Warning</AlertTitle>
