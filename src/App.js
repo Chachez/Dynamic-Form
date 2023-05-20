@@ -10,12 +10,15 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { styled } from "@mui/system";
 
 import "./App.css";
+import { accounts } from "./data";
 
 const RootComponent = styled("div")(({ theme }) => ({
   maxWidth: "100%",
@@ -57,7 +60,6 @@ const App = () => {
     const list = [...inputField];
     list.splice(index, 1);
     setInputField(list);
-    console.log(index);
   };
 
   const handleInputChange = (e, index) => {
@@ -66,6 +68,8 @@ const App = () => {
     list[index][name] = value;
     setInputField(list);
   };
+
+  console.log(inputField);
 
   return (
     <RootComponent>
@@ -90,72 +94,77 @@ const App = () => {
                 </TableCell>
               ))}
             </TableHead>
-            {inputField.map((field, idx) => {
-              return (
-                <TableRow key="5">
-                  <TableCell>
-                    <TextField
-                      id="outlined-basic"
-                      variant="outlined"
-                      fullWidth
-                      onChange={(e) => handleInputChange(e, idx)}
-                      margin="normal"
-                      name="account"
-                      value={field.account || ""}
-                    />
-                  </TableCell>
-
-                  <TableCell>
-                    <TextField
-                      id="outlined-basic"
-                      variant="outlined"
-                      fullWidth
-                      onChange={(e) => handleInputChange(e, idx)}
-                      margin="normal"
-                      name="debit"
-                      value={field.debit || ""}
-                    />
-                  </TableCell>
-
-                  <TableCell>
-                    <TextField
-                      id="outlined-basic"
-                      variant="outlined"
-                      fullWidth
-                      onChange={(e) => handleInputChange(e, idx)}
-                      margin="normal"
-                      name="credit"
-                      value={field.credit || ""}
-                    />
-                  </TableCell>
-
-                  <TableCell align="right">12,540.00</TableCell>
-
-                  <TableCell>
-                    {inputField.length !== 1 && (
-                      <Fab
-                        color="primary"
-                        aria-label="add"
-                        onClick={() => removeInputField(idx)}
-                        style={{ marginTop: "1rem" }}
+            <TableBody>
+              {inputField.map((field, idx) => {
+                return (
+                  <TableRow key={idx}>
+                    <TableCell>
+                      <Select
+                        fullWidth
+                        name="account"
+                        value={field.account || ""}
+                        onChange={(e) => handleInputChange(e, idx)}
                       >
-                        <DeleteIcon />
-                      </Fab>
-                    )}
-                    {inputField.length - 1 === idx && (
-                      <Fab
-                        color="primary"
-                        aria-label="add"
-                        onClick={addInputField}
-                        style={{ marginTop: "1rem", marginLeft: "3rem" }}
-                      >
-                        <AddIcon />
-                      </Fab>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                        {accounts?.map((acc, index) => (
+                          <MenuItem key={index} value={acc.name}>
+                            {acc.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </TableCell>
+
+                    <TableCell>
+                      <TextField
+                        id="outlined-basic"
+                        variant="outlined"
+                        fullWidth
+                        onChange={(e) => handleInputChange(e, idx)}
+                        margin="normal"
+                        name="debit"
+                        value={field.debit || ""}
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <TextField
+                        id="outlined-basic"
+                        variant="outlined"
+                        fullWidth
+                        onChange={(e) => handleInputChange(e, idx)}
+                        margin="normal"
+                        name="credit"
+                        value={field.credit || ""}
+                      />
+                    </TableCell>
+
+                    <TableCell align="right">12,540.00</TableCell>
+
+                    <TableCell>
+                      {inputField.length !== 1 && (
+                        <Fab
+                          color="primary"
+                          aria-label="add"
+                          onClick={() => removeInputField(idx)}
+                          style={{ marginTop: "1rem" }}
+                        >
+                          <DeleteIcon />
+                        </Fab>
+                      )}
+                      {inputField.length - 1 === idx && (
+                        <Fab
+                          color="primary"
+                          aria-label="add"
+                          onClick={addInputField}
+                          style={{ marginTop: "1rem", marginLeft: "3rem" }}
+                        >
+                          <AddIcon />
+                        </Fab>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
           </Table>
         </form>
       </PaperComponent>
