@@ -169,7 +169,7 @@ const App = () => {
       return () => clearTimeout(timer);
     }
   }, [debitSum, creditSum, values.showAlert]);
-  console.log(inputField);
+  console.log(inputField.some((field) => !field.account));
 
   return (
     <RootComponent>
@@ -377,6 +377,12 @@ const App = () => {
                 </Alert>
               )}
 
+              {inputField.some((field) => !field.account) && (
+                <Alert severity="error" style={{ margin: "1rem" }}>
+                  Account cannot be empty
+                </Alert>
+              )}
+
               <Field
                 as={TextField}
                 variant="outlined"
@@ -408,7 +414,8 @@ const App = () => {
                   type="submit"
                   disabled={
                     debitSum !== creditSum ||
-                    (debitSum === 0 && creditSum === 0)
+                    (debitSum === 0 && creditSum === 0) ||
+                    inputField.some((field) => !field.account)
                   }
                 >
                   Save & Publish
