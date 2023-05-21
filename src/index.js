@@ -1,13 +1,26 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { SnackbarProvider } from "notistack";
+import reportWebVitals from "./reportWebVitals";
+import { Slide } from "@mui/material";
+
 import "./index.css";
 import App from "./App";
-import reportWebVitals from "./reportWebVitals";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    <SnackbarProvider
+      anchorOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      TransitionComponent={Slide}
+      preventDuplicate
+      dense
+    >
+      <App />
+    </SnackbarProvider>
   </React.StrictMode>
 );
 

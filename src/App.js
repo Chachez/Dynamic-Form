@@ -23,6 +23,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { styled } from "@mui/system";
 import { Formik, Field, ErrorMessage, Form } from "formik";
 import * as Yup from "yup";
+import { useSnackbar } from "notistack";
 
 import "./App.css";
 import { accounts } from "./data";
@@ -65,13 +66,25 @@ const App = () => {
   const [inputField, setInputField] = useState([
     { account: "", debit: "", credit: "", status: "" },
   ]);
-
   const [alertVisible, setAlertVisible] = useState(false);
   const [values, setValues] = useState({
     isValid: false,
     alertMessage: "",
     showAlert: false,
   });
+  const { enqueueSnackbar } = useSnackbar();
+
+  const successNotify = (message) => {
+    enqueueSnackbar(message, {
+      variant: "success",
+    });
+  };
+
+  const errorNotify = (message) => {
+    enqueueSnackbar(message, {
+      variant: "error",
+    });
+  };
 
   const addInputField = () => {
     const lastField = inputField[inputField.length - 1];
@@ -175,6 +188,12 @@ const App = () => {
           onSubmit={(values, { resetForm }) => {
             resetForm();
             setInputField([{ account: "", debit: "", credit: "", status: "" }]);
+            const successMessage = "Journal Successfully Created";
+            const errorMessage = "Error Creating Journal";
+
+            successNotify(successMessage);
+            // errorNotify(errorMessage);
+
             console.log("values", values);
           }}
         >
