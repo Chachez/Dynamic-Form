@@ -369,10 +369,12 @@ const App = () => {
                 </Alert>
               )}
 
-              {inputField.some((field) => !field.account) && (
-                <Alert severity="error" style={{ margin: "1rem" }}>
-                  Account cannot be empty
-                </Alert>
+              {inputField.map((field, idx) =>
+                (field.debit || field.credit) && !field.account ? (
+                  <Alert severity="error" style={{ margin: "1rem" }} key={idx}>
+                    Account cannot be empty in row {idx + 1}
+                  </Alert>
+                ) : null
               )}
 
               <Field
@@ -407,7 +409,9 @@ const App = () => {
                   disabled={
                     debitSum !== creditSum ||
                     (debitSum === 0 && creditSum === 0) ||
-                    inputField.some((field) => !field.account)
+                    inputField.some(
+                      (field) => (field.debit || field.credit) && !field.account
+                    )
                   }
                 >
                   Save & Publish
