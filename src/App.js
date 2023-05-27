@@ -80,12 +80,6 @@ const App = () => {
     });
   };
 
-  const errorNotify = (message) => {
-    enqueueSnackbar(message, {
-      variant: "error",
-    });
-  };
-
   const addInputField = () => {
     const lastField = inputField[inputField.length - 1];
     if (lastField.account && (lastField.debit || lastField.credit)) {
@@ -192,7 +186,6 @@ const App = () => {
             const errorMessage = "Error Creating Journal";
 
             successNotify(successMessage);
-            // errorNotify(errorMessage);
 
             console.log("values", values);
           }}
