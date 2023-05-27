@@ -183,7 +183,6 @@ const App = () => {
             resetForm();
             setInputField([{ account: "", debit: "", credit: "", status: "" }]);
             const successMessage = "Journal Successfully Created";
-            const errorMessage = "Error Creating Journal";
 
             successNotify(successMessage);
 
